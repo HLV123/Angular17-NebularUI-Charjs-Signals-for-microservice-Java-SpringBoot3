@@ -1,6 +1,9 @@
 # OmniRevenue Platform
 Hệ thống quản lý bán hàng đa kênh toàn diện — phục vụ 14 nghiệp vụ cốt lõi: Dashboard, Sản phẩm, Kho hàng, Đơn hàng, CRM 360°, Marketing, Đa kênh, Analytics, Tài chính, Nhân viên, Thông báo, Tìm kiếm, Data Governance, Pipeline.
-
+<img src="ui/ui1.png" width="900">
+<img src="ui/ui2.png" width="900">
+<img src="ui/ui3.png" width="900">
+<img src="ui/ui4.png" width="900">
 **Frontend** chạy độc lập bằng mock data, sẵn sàng kết nối **15 microservices** backend chỉ bằng 1 dòng config.
 
 ```
