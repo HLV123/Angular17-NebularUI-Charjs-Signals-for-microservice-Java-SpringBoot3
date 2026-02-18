@@ -1,0 +1,35 @@
+@use '../../pages/products/products.component.scss';
+
+.tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--bl);
+    overflow-x: auto;
+
+    button {
+        padding: .65rem 1.2rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: .84rem;
+        color: var(--ts);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all .15s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        white-space: nowrap;
+
+        &.active {
+            color: var(--p);
+            border-bottom-color: var(--p);
+        }
+
+        &:hover {
+            color: var(--p);
+        }
+    }
+}

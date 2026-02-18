@@ -1,0 +1,113 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-wallet" style="color:var(--p)"></i> Tài Chính & Đối Soát</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> REST · gRPC</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-arrow-down"></i></div>
+      <div>
+        <div class="kv">{{ summary.income | vnd }}</div>
+        <div class="kl">Tổng thu</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki dr"><i class="fas fa-arrow-up"></i></div>
+      <div>
+        <div class="kv">{{ summary.expense | vnd }}</div>
+        <div class="kl">Tổng chi</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-undo"></i></div>
+      <div>
+        <div class="kv">{{ summary.refund | vnd }}</div>
+        <div class="kl">Hoàn trả</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-hand-holding-usd"></i></div>
+      <div>
+        <div class="kv" [style.color]="summary.profit >= 0 ? 'var(--s)' : 'var(--d)'">{{ summary.profit | vnd }}</div>
+        <div class="kl">Lợi nhuận</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-hdr">
+      <h3><i class="fas fa-chart-bar"></i> Thu chi theo tháng</h3>
+    </div>
+    <div class="card-body">
+      <div class="chart-container"><canvas #finChart></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-exchange-alt"></i> Giao dịch gần đây</h3>
+      </div>
+      <div class="card-body p0">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Loại</th>
+              <th>Số tiền</th>
+              <th>Phương thức</th>
+              <th>Mô tả</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of fin.getTransactions(); track tx.id) {
+            <tr>
+              <td class="fw">{{ tx.code }}</td>
+              <td><span class="sb" [ngClass]="getTypeClass(tx.type)">{{ getTypeLabel(tx.type) }}</span></td>
+              <td class="fw" [style.color]="tx.type==='income'?'var(--s)':'var(--d)'">{{ tx.type === 'income' ? '+' :
+                '-' }}{{ tx.amount | vnd }}</td>
+              <td>{{ tx.method }}</td>
+              <td class="hint">{{ tx.description }}</td>
+              <td class="hint">{{ tx.createdAt | relativeTime }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-check-double"></i> Đối soát cổng thanh toán</h3>
+      </div>
+      <div class="card-body p0">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Cổng TT</th>
+              <th>Dự kiến</th>
+              <th>Thực tế</th>
+              <th>Chênh lệch</th>
+              <th>Kết quả</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of fin.getReconciliation(); track r.channel) {
+            <tr>
+              <td class="fw">{{ r.channel }}</td>
+              <td>{{ r.expected | vnd }}</td>
+              <td>{{ r.actual | vnd }}</td>
+              <td [style.color]="r.difference > 0 ? 'var(--d)' : 'inherit'" class="fw">{{ r.difference > 0 ? '-' : ''
+                }}{{ r.difference | vnd }}</td>
+              <td><span class="sb" [ngClass]="r.status === 'matched' ? 'ok' : 'flash'"><i class="fas"
+                    [ngClass]="r.status==='matched'?'fa-check':'fa-exclamation-triangle'"></i> {{ r.status === 'matched'
+                  ? 'Khớp' : 'Lệch' }}</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,194 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-bullhorn" style="color:var(--p)"></i> Marketing & Khuyến Mãi</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> REST · Kafka</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-bullhorn"></i></div>
+      <div>
+        <div class="kv">{{ kpis().totalCampaigns }}</div>
+        <div class="kl">Chiến dịch</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-play-circle"></i></div>
+      <div>
+        <div class="kv">{{ kpis().running }}</div>
+        <div class="kl">Đang chạy</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-eye"></i></div>
+      <div>
+        <div class="kv">{{ kpis().totalReach | number }}</div>
+        <div class="kl">Tổng reach</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-ticket-alt"></i></div>
+      <div>
+        <div class="kv">{{ kpis().activeVouchers }}</div>
+        <div class="kl">Voucher active</div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button [class.active]="activeTab()==='campaigns'" (click)="activeTab.set('campaigns')"><i
+        class="fas fa-bullhorn"></i> Chiến dịch</button>
+    <button [class.active]="activeTab()==='vouchers'" (click)="activeTab.set('vouchers')"><i
+        class="fas fa-ticket-alt"></i> Voucher</button>
+  </div>
+
+  @if (activeTab() === 'campaigns') {
+  <div class="toolbar">
+    <div class="toolbar-left"></div><button class="btn-primary"
+      (click)="campaignForm.reset({type:'email',budget:0}); showCampaignForm.set(true)"><i class="fas fa-plus"></i> Tạo
+      chiến dịch</button>
+  </div>
+  <div class="grid-2">
+    @for (c of mkt.getCampaigns(); track c.id) {
+    <div class="card campaign-card">
+      <div class="card-body">
+        <div class="cc-header">
+          <div class="cc-icon"><i class="fas" [ngClass]="getTypeIcon(c.type)"></i></div>
+          <div>
+            <h4>{{ c.name }}</h4><span class="hint">{{ c.type | uppercase }} · {{ c.targetSegment }}</span>
+          </div>
+          <span class="sb" [ngClass]="getStatusClass(c.status)" style="margin-left:auto">{{ getStatusLabel(c.status)
+            }}</span>
+        </div>
+        <div class="cc-metrics">
+          <div><span class="ml">Reach</span><span class="mv">{{ c.reach | number }}</span></div>
+          <div><span class="ml">Clicks</span><span class="mv">{{ c.clicks | number }}</span></div>
+          <div><span class="ml">Conv.</span><span class="mv">{{ c.conversions | number }}</span></div>
+          @if (c.openRate) { <div><span class="ml">Open rate</span><span class="mv">{{ c.openRate }}%</span></div> }
+          @if (c.clickRate) { <div><span class="ml">CTR</span><span class="mv">{{ c.clickRate }}%</span></div> }
+        </div>
+        <div class="cc-budget">
+          <div class="budget-bar">
+            <div class="budget-fill" [style.width.%]="c.budget ? (c.spent/c.budget*100) : 0"></div>
+          </div>
+          <span class="hint">{{ c.spent | vnd }} / {{ c.budget | vnd }}</span>
+        </div>
+        <div class="action-btns" style="margin-top:.5rem"><button class="btn-icon danger"
+            (click)="confirmDelete('campaign',c.id)"><i class="fas fa-trash"></i></button></div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (activeTab() === 'vouchers') {
+  <div class="toolbar">
+    <div class="toolbar-left"></div><button class="btn-primary"
+      (click)="voucherForm.reset({type:'percentage',value:0,minOrderValue:0,usageLimit:100,perCustomerLimit:1}); showVoucherForm.set(true)"><i
+        class="fas fa-plus"></i> Tạo voucher</button>
+  </div>
+  <div class="card">
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Tên</th>
+            <th>Loại</th>
+            <th>Giá trị</th>
+            <th>Đã dùng</th>
+            <th>Giới hạn</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of mkt.getVouchers(); track v.id) {
+          <tr>
+            <td class="fw">{{ v.code }}</td>
+            <td>{{ v.name }}</td>
+            <td>{{ v.type === 'percentage' ? '%' : v.type === 'fixed' ? '₫' : v.type === 'freeship' ? 'Freeship' : 'Buy
+              X' }}</td>
+            <td class="fw">{{ v.type === 'percentage' ? v.value + '%' : (v.value | vnd) }}</td>
+            <td>{{ v.usedCount }}/{{ v.usageLimit }}</td>
+            <td class="hint">Min {{ v.minOrderValue | vnd }}</td>
+            <td><span class="sb" [ngClass]="getVoucherStatusClass(v.status)">{{ v.status | uppercase }}</span></td>
+            <td><button class="btn-icon danger" (click)="confirmDelete('voucher',v.id)"><i
+                  class="fas fa-trash"></i></button></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (showCampaignForm()) {
+  <div class="modal-overlay" (click)="showCampaignForm.set(false)">
+    <div class="modal-lg" style="max-width:550px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-bullhorn" style="color:var(--p)"></i> Tạo chiến dịch</h3><button class="btn-icon"
+          (click)="showCampaignForm.set(false)"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="campaignForm" (ngSubmit)="saveCampaign()">
+        <div class="modal-body">
+          <div class="form-group"><label>Tên chiến dịch *</label><input formControlName="name"
+              placeholder="VD: Flash Sale cuối tuần"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Loại</label><select formControlName="type">
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="zns">Zalo ZNS</option>
+                <option value="push">Push</option>
+                <option value="facebook">Facebook</option>
+              </select></div>
+            <div class="form-group"><label>Phân khúc *</label><input formControlName="targetSegment"
+                placeholder="VD: Champions"></div>
+          </div>
+          <div class="form-group"><label>Ngân sách (₫)</label><input formControlName="budget" type="number"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-cancel"
+            (click)="showCampaignForm.set(false)">Hủy</button><button type="submit" class="btn-primary"
+            [disabled]="campaignForm.invalid"><i class="fas fa-save"></i> Tạo</button></div>
+      </form>
+    </div>
+  </div>
+  }
+
+  @if (showVoucherForm()) {
+  <div class="modal-overlay" (click)="showVoucherForm.set(false)">
+    <div class="modal-lg" style="max-width:550px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-ticket-alt" style="color:var(--p)"></i> Tạo voucher</h3><button class="btn-icon"
+          (click)="showVoucherForm.set(false)"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="voucherForm" (ngSubmit)="saveVoucher()">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group"><label>Mã voucher *</label><input formControlName="code" placeholder="VD: SALE20">
+            </div>
+            <div class="form-group"><label>Tên *</label><input formControlName="name" placeholder="VD: Giảm 20%"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Loại</label><select formControlName="type">
+                <option value="percentage">Phần trăm (%)</option>
+                <option value="fixed">Số tiền (₫)</option>
+                <option value="freeship">Freeship</option>
+              </select></div>
+            <div class="form-group"><label>Giá trị *</label><input formControlName="value" type="number"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Đơn tối thiểu</label><input formControlName="minOrderValue" type="number">
+            </div>
+            <div class="form-group"><label>Giới hạn dùng</label><input formControlName="usageLimit" type="number"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-cancel"
+            (click)="showVoucherForm.set(false)">Hủy</button><button type="submit" class="btn-primary"
+            [disabled]="voucherForm.invalid"><i class="fas fa-save"></i> Tạo</button></div>
+      </form>
+    </div>
+  </div>
+  }
+  <app-confirm-dialog [visible]="showDeleteConfirm()" title="Xác nhận xóa" message="Bạn có chắc muốn xóa mục này?"
+    confirmText="Xóa" type="danger" (confirmed)="doDelete()"
+    (cancelled)="showDeleteConfirm.set(false)"></app-confirm-dialog>
+</div>

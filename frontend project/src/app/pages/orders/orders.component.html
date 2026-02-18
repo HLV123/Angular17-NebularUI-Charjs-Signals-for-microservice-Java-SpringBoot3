@@ -1,0 +1,176 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-shopping-cart" style="color:var(--p)"></i> Quản Lý Đơn Hàng</h2>
+    <div class="hdr-tags">
+      <span class="proto-tag"><i class="fas fa-bolt"></i> Kafka · WebSocket</span>
+      <span class="proto-tag"><i class="fas fa-plug"></i> gRPC → Inventory</span>
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-file-invoice"></i></div>
+      <div>
+        <div class="kv">{{ kpis().today }}</div>
+        <div class="kl">Đơn hôm nay</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-hourglass-half"></i></div>
+      <div>
+        <div class="kv">{{ kpis().pending }}</div>
+        <div class="kl">Chờ xử lý</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-check-double"></i></div>
+      <div>
+        <div class="kv">{{ kpis().completionRate }}%</div>
+        <div class="kl">Tỷ lệ hoàn thành</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki dr"><i class="fas fa-undo"></i></div>
+      <div>
+        <div class="kv">{{ kpis().cancelled }}</div>
+        <div class="kl">Hoàn/hủy</div>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-input"><i class="fas fa-search"></i><input type="text" placeholder="Tìm mã đơn, tên KH..."
+          [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); currentPage.set(1)"></div>
+      <select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event); currentPage.set(1)">
+        <option value="">Tất cả kênh</option>
+        @for (ch of channels; track ch) { <option [value]="ch">{{ ch }}</option> }
+      </select>
+      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); currentPage.set(1)">
+        <option value="">Tất cả trạng thái</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ getStatusLabel(s) }}</option> }
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Mã đơn</th>
+            <th>Kênh</th>
+            <th>Khách hàng</th>
+            <th>Tổng tiền</th>
+            <th>Thanh toán</th>
+            <th>Trạng thái</th>
+            <th>SLA</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of paginatedOrders(); track o.id) {
+          <tr class="clickable-row" (click)="openDetail(o)">
+            <td class="fw">{{ o.code }}</td>
+            <td><span class="ch" [ngClass]="getChannelClass(o.channel)">{{ o.channel }}</span></td>
+            <td>{{ o.customerName }}</td>
+            <td class="fw">{{ o.total | vnd }}</td>
+            <td><span class="sb" [ngClass]="o.paymentStatus === 'paid' ? 'ok' : 'wait'">{{ o.paymentMethod }} {{
+                o.paymentStatus === 'paid' ? '✓' : '⏳' }}</span></td>
+            <td><span class="sb" [ngClass]="getStatusClass(o.status)">{{ getStatusLabel(o.status) }}</span></td>
+            <td><span [class.text-danger]="isSlaUrgent(o.slaDeadline)"
+                [class.text-warn]="!isSlaUrgent(o.slaDeadline)">{{ getSlaRemaining(o.slaDeadline) }}</span></td>
+            <td class="hint">{{ o.createdAt | relativeTime }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [totalItems]="filteredOrders().length" [pageSize]="pageSize" [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
+
+  @if (showDetail() && selectedOrder()) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-receipt" style="color:var(--p)"></i> Đơn hàng {{ selectedOrder()!.code }}</h3>
+        <button class="btn-icon" (click)="closeDetail()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Status stepper -->
+        <div class="stepper">
+          @for (step of getStatusFlow(); track step; let i = $index) {
+          <div class="step" [class.done]="i <= getStepIndex(selectedOrder()!.status)"
+            [class.current]="step === selectedOrder()!.status">
+            <div class="step-dot"></div>
+            <span>{{ getStatusLabel(step) }}</span>
+          </div>
+          @if (i < getStatusFlow().length - 1) { <div class="step-line"
+            [class.done]="i < getStepIndex(selectedOrder()!.status)">
+        </div> }
+        }
+      </div>
+      <div class="detail-grid" style="margin-top:1.5rem">
+        <div class="detail-item"><span class="dl">Kênh</span><span class="dv"><span class="ch"
+              [ngClass]="getChannelClass(selectedOrder()!.channel)">{{ selectedOrder()!.channel }}</span></span></div>
+        <div class="detail-item"><span class="dl">Khách hàng</span><span class="dv fw">{{ selectedOrder()!.customerName
+            }}</span></div>
+        <div class="detail-item"><span class="dl">SĐT</span><span class="dv">{{ selectedOrder()!.customerPhone || 'N/A'
+            }}</span></div>
+        <div class="detail-item"><span class="dl">Địa chỉ</span><span class="dv">{{ selectedOrder()!.shippingAddress
+            }}</span></div>
+      </div>
+      <h4 style="margin:1.5rem 0 .5rem"><i class="fas fa-box"></i> Sản phẩm</h4>
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Sản phẩm</th>
+            <th>Giá</th>
+            <th>SL</th>
+            <th>Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of selectedOrder()!.items; track item.sku) {
+          <tr>
+            <td class="fw">{{ item.sku }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.price | vnd }}</td>
+            <td>{{ item.quantity }}</td>
+            <td class="fw">{{ item.total | vnd }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      <div class="order-totals">
+        <div><span>Tạm tính:</span><span>{{ selectedOrder()!.subtotal | vnd }}</span></div>
+        <div><span>Phí ship:</span><span>{{ selectedOrder()!.shippingFee | vnd }}</span></div>
+        @if (selectedOrder()!.discount > 0) { <div><span>Giảm giá:</span><span style="color:var(--d)">-{{
+            selectedOrder()!.discount | vnd }}</span></div> }
+        <div class="total-line"><span>Tổng cộng:</span><span>{{ selectedOrder()!.total | vnd }}</span></div>
+      </div>
+      <!-- Action buttons -->
+      @if (!['completed','cancelled','returned'].includes(selectedOrder()!.status)) {
+      <div class="order-actions">
+        @if (selectedOrder()!.status === 'new') { <button class="btn-primary"
+          (click)="changeStatus(selectedOrder()!.id, 'confirmed')"><i class="fas fa-check"></i> Xác nhận</button> }
+        @if (selectedOrder()!.status === 'confirmed' || selectedOrder()!.status === 'paid') { <button
+          class="btn-primary" (click)="changeStatus(selectedOrder()!.id, 'processing')"><i class="fas fa-cogs"></i> Xử
+          lý</button> }
+        @if (selectedOrder()!.status === 'processing') { <button class="btn-primary"
+          (click)="changeStatus(selectedOrder()!.id, 'packing')"><i class="fas fa-box"></i> Đóng gói</button> }
+        @if (selectedOrder()!.status === 'packing') { <button class="btn-primary"
+          (click)="changeStatus(selectedOrder()!.id, 'shipping')"><i class="fas fa-truck"></i> Giao vận chuyển</button>
+        }
+        @if (selectedOrder()!.status === 'shipping' || selectedOrder()!.status === 'delivered') { <button
+          class="btn-primary" (click)="changeStatus(selectedOrder()!.id, 'completed')"><i
+            class="fas fa-check-double"></i> Hoàn thành</button> }
+        @if (!['shipping','delivered','completed'].includes(selectedOrder()!.status)) { <button class="btn-cancel"
+          style="color:var(--d)" (click)="changeStatus(selectedOrder()!.id, 'cancelled')"><i class="fas fa-times"></i>
+          Hủy đơn</button> }
+      </div>
+      }
+    </div>
+  </div>
+</div>
+}
+</div>

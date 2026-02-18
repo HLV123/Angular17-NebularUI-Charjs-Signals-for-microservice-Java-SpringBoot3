@@ -1,0 +1,21 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-stream" style="color:var(--p)"></i> Pipeline Dữ Liệu</h2>
+    <div class="hdr-tags">
+      <span class="proto-tag"><i class="fas fa-bolt"></i> Spark + Airflow</span>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="ki sc"><i class="fas fa-play-circle"></i></div><div><div class="kv">1</div><div class="kl">DAG đang chạy</div></div></div>
+    <div class="kpi"><div class="ki pr"><i class="fas fa-check-circle"></i></div><div><div class="kv">5</div><div class="kl">DAG thành công</div></div></div>
+    <div class="kpi"><div class="ki wr"><i class="fas fa-pause-circle"></i></div><div><div class="kv">1</div><div class="kl">DAG chờ</div></div></div>
+    <div class="kpi"><div class="ki ir"><i class="fas fa-microchip"></i></div><div><div class="kv">3</div><div class="kl">Spark jobs</div></div></div>
+  </div>
+  <div class="card"><div class="card-hdr"><h3>Airflow DAGs</h3></div><div class="card-body p0"><table class="dtbl"><thead><tr><th>DAG ID</th><th>Mô tả</th><th>Lịch</th><th>Trạng thái</th><th>Duration</th><th>Success</th></tr></thead><tbody>
+    <tr><td class="fw">daily_rfm_calculation</td><td>Tính RFM KH</td><td>01:00 AM</td><td><span class="sb ok">✓ Success</span></td><td>342s</td><td>98.5%</td></tr>
+    <tr><td class="fw">hourly_revenue_report</td><td>Tổng hợp DT</td><td>Mỗi giờ</td><td><span class="sb info">🔄 Running</span></td><td>45s</td><td>99.8%</td></tr>
+    <tr><td class="fw">marketplace_sync</td><td>Đồng bộ sàn</td><td>15 phút</td><td><span class="sb ok">✓ Success</span></td><td>28s</td><td>97.2%</td></tr>
+    <tr><td class="fw">churn_prediction</td><td>Churn model</td><td>CN 04:00</td><td><span class="sb ok">✓ Success</span></td><td>890s</td><td>96.3%</td></tr>
+  </tbody></table></div></div>
+</div>

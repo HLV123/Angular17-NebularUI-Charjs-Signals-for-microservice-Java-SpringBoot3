@@ -1,0 +1,125 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-th-large" style="color:var(--p)"></i> Dashboard</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> RSocket · Real-time</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-dollar-sign"></i></div>
+      <div>
+        <div class="kv">{{ kpis.revenue | vnd }}</div>
+        <div class="kl">Doanh thu</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-shopping-bag"></i></div>
+      <div>
+        <div class="kv">{{ kpis.orders }}</div>
+        <div class="kl">Đơn hàng</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-users"></i></div>
+      <div>
+        <div class="kv">{{ kpis.customers }}</div>
+        <div class="kl">Khách hàng</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-hourglass-half"></i></div>
+      <div>
+        <div class="kv">{{ kpis.pending }}</div>
+        <div class="kl">Chờ xử lý</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem;margin-bottom:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-chart-line"></i> Xu hướng doanh thu</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-sm"><canvas #miniRevenueChart></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-chart-pie"></i> Phân bổ kênh bán</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-sm"><canvas #miniChannelChart></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-clock" style="color:var(--p)"></i> Đơn hàng mới nhất</h3>
+      </div>
+      <div class="card-body p0">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Kênh</th>
+              <th>Khách hàng</th>
+              <th>Tổng</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of recentOrders; track o.id) {
+            <tr>
+              <td class="fw">{{ o.code }}</td>
+              <td><span class="ch" [ngClass]="getChannelClass(o.channel)">{{ o.channel }}</span></td>
+              <td>{{ o.customerName }}</td>
+              <td class="fw">{{ o.total | vnd }}</td>
+              <td><span class="sb" [ngClass]="getStatusClass(o.status)">{{ getStatusLabel(o.status) }}</span></td>
+              <td class="hint">{{ o.createdAt | relativeTime }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-exclamation-triangle" style="color:var(--w)"></i> Sản phẩm sắp hết hàng</h3>
+      </div>
+      <div class="card-body p0">
+        @if (lowStockProducts.length === 0) {
+        <div style="padding:2rem;text-align:center;color:var(--ts)"><i class="fas fa-check-circle"
+            style="font-size:2rem;color:var(--s)"></i>
+          <p>Tất cả sản phẩm đều đủ hàng!</p>
+        </div>
+        } @else {
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Sản phẩm</th>
+              <th>Tồn kho</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of lowStockProducts; track p.id) {
+            <tr>
+              <td class="fw">{{ p.sku }}</td>
+              <td>{{ p.name }}</td>
+              <td [style.color]="p.stock === 0 ? 'var(--d)' : 'var(--w)'" class="fw">{{ p.stock }}</td>
+              <td><span class="sb" [ngClass]="p.stock === 0 ? 'flash' : 'wait'">{{ p.stock === 0 ? 'Hết hàng' : 'Sắp
+                  hết' }}</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        }
+      </div>
+    </div>
+  </div>
+</div>

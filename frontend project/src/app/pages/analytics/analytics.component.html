@@ -1,0 +1,130 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-chart-bar" style="color:var(--p)"></i> Báo Cáo & Phân Tích</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> RSocket · REST</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-dollar-sign"></i></div>
+      <div>
+        <div class="kv">{{ kpis.totalRevenue | vnd }}</div>
+        <div class="kl">Tổng doanh thu</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-shopping-bag"></i></div>
+      <div>
+        <div class="kv">{{ kpis.totalOrders }}</div>
+        <div class="kl">Tổng đơn hàng</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-percentage"></i></div>
+      <div>
+        <div class="kv">{{ kpis.conversionRate }}%</div>
+        <div class="kl">Tỷ lệ chuyển đổi</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-receipt"></i></div>
+      <div>
+        <div class="kv">{{ kpis.avgOrderValue | vnd }}</div>
+        <div class="kl">AOV</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem;margin-bottom:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-chart-line"></i> Doanh thu & Chi phí</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-container"><canvas #revenueChart></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-chart-pie"></i> Doanh thu theo kênh</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-container"><canvas #channelChart></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2" style="gap:1rem;margin-bottom:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-chart-bar"></i> Doanh thu theo danh mục</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-container"><canvas #categoryChart></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-clipboard-list"></i> Trạng thái đơn hàng</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-container"><canvas #orderStatusChart></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem">
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-fire" style="color:var(--w)"></i> Top 5 sản phẩm bán chạy</h3>
+      </div>
+      <div class="card-body p0">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Sản phẩm</th>
+              <th>Đã bán</th>
+              <th>Doanh thu</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of topProducts; track p.id; let i = $index) {
+            <tr>
+              <td><span class="rank" [ngClass]="i < 3 ? 'top' : ''">{{ i + 1 }}</span></td>
+              <td>{{ p.name }}</td>
+              <td class="fw">{{ p.sold | number }}</td>
+              <td class="fw">{{ p.sold * p.price | vnd }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-crown" style="color:var(--w)"></i> Top 5 khách hàng</h3>
+      </div>
+      <div class="card-body p0">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Khách hàng</th>
+              <th>Đơn</th>
+              <th>Chi tiêu</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of topCustomers; track c.id; let i = $index) {
+            <tr>
+              <td><span class="rank" [ngClass]="i < 3 ? 'top' : ''">{{ i + 1 }}</span></td>
+              <td>{{ c.name }}</td>
+              <td>{{ c.totalOrders }}</td>
+              <td class="fw">{{ c.totalSpent | vnd }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-brand">
+      <img src="assets/logo.png" alt="Logo">
+      <h1>OmniRevenue</h1>
+      <p>Omnichannel Revenue Platform<br>Hệ thống Quản Lý Bán Hàng & Marketing Đa Kênh</p>
+    </div>
+    <div class="login-features">
+      <div class="feat"><i class="fas fa-bolt"></i> Realtime Dashboard · WebSocket & RSocket</div>
+      <div class="feat"><i class="fas fa-store"></i> Tích hợp Shopee, Lazada, TikTok, POS</div>
+      <div class="feat"><i class="fas fa-chart-line"></i> Phân tích Spark + Airflow Pipeline</div>
+      <div class="feat"><i class="fas fa-shield-alt"></i> Data Governance: Atlas + Ranger</div>
+      <div class="feat"><i class="fas fa-search"></i> Tìm kiếm thông minh Elasticsearch</div>
+    </div>
+  </div>
+  <div class="login-right">
+    <h2>Đăng nhập</h2>
+    <p class="sub">Chào mừng đến OmniRevenue Platform</p>
+    <div class="error" *ngIf="error">{{ error }}</div>
+    <div class="fg">
+      <label>Tên đăng nhập</label>
+      <input type="text" [(ngModel)]="username" placeholder="Nhập username" (keyup.enter)="login()">
+    </div>
+    <div class="fg">
+      <label>Mật khẩu</label>
+      <input type="password" [(ngModel)]="password" placeholder="Nhập mật khẩu" (keyup.enter)="login()">
+    </div>
+    <button class="login-btn" (click)="login()"><i class="fas fa-sign-in-alt"></i> Đăng nhập</button>
+    <div class="demo-box">
+      <h4><i class="fas fa-info-circle"></i> Tài khoản demo (mật khẩu: 123456)</h4>
+      <div class="demo-item" *ngFor="let u of demoUsers" (click)="fillLogin(u)">
+        <span class="role">{{ u.roleLabel }}</span>
+        <span class="uname">{{ u.username }}</span>
+      </div>
+    </div>
+  </div>
+</div>

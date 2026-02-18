@@ -1,0 +1,20 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-shield-alt" style="color:var(--p)"></i> Atlas / Ranger · Quản Trị Dữ Liệu</h2>
+    <div class="hdr-tags">
+      <span class="proto-tag"><i class="fas fa-bolt"></i> Atlas + Ranger</span>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="ki pr"><i class="fas fa-database"></i></div><div><div class="kv">24</div><div class="kl">Data Catalog</div></div></div>
+    <div class="kpi"><div class="ki wr"><i class="fas fa-user-secret"></i></div><div><div class="kv">8</div><div class="kl">PII fields</div></div></div>
+    <div class="kpi"><div class="ki sc"><i class="fas fa-lock"></i></div><div><div class="kv">15</div><div class="kl">Access policies</div></div></div>
+    <div class="kpi"><div class="ki ir"><i class="fas fa-project-diagram"></i></div><div><div class="kv">12</div><div class="kl">Lineage graphs</div></div></div>
+  </div>
+  <div class="card"><div class="card-body p0"><table class="dtbl"><thead><tr><th>Entity</th><th>Type</th><th>Classification</th><th>Owner</th><th>Tags</th></tr></thead><tbody>
+    <tr><td class="fw">customers</td><td>TABLE</td><td><span class="sb flash">PII</span></td><td>CRM Service</td><td><span class="sb wait">email</span> <span class="sb wait">phone</span></td></tr>
+    <tr><td class="fw">orders.created</td><td>KAFKA_TOPIC</td><td><span class="sb info">INTERNAL</span></td><td>Order Service</td><td><span class="sb new">financial</span></td></tr>
+    <tr><td class="fw">payments</td><td>TABLE</td><td><span class="sb flash">CONFIDENTIAL</span></td><td>Payment Service</td><td><span class="sb flash">card_number</span></td></tr>
+  </tbody></table></div></div>
+</div>

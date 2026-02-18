@@ -1,0 +1,99 @@
+@use '../../pages/products/products.component.scss';
+
+.clickable-row {
+    cursor: pointer;
+
+    &:hover td {
+        background: var(--ph) !important;
+    }
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: .5rem 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .3rem;
+    min-width: 70px;
+    font-size: .7rem;
+    color: var(--ts);
+    position: relative;
+
+    .step-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--brd);
+        background: #fff;
+        transition: all .2s;
+    }
+
+    &.done .step-dot {
+        background: var(--s);
+        border-color: var(--s);
+    }
+
+    &.current .step-dot {
+        background: var(--p);
+        border-color: var(--p);
+        box-shadow: 0 0 0 4px rgba(51, 102, 255, .15);
+    }
+
+    &.done span,
+    &.current span {
+        color: var(--t);
+        font-weight: 600;
+    }
+}
+
+.step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--brd);
+    min-width: 20px;
+
+    &.done {
+        background: var(--s);
+    }
+}
+
+.order-totals {
+    margin-top: 1rem;
+    border-top: 1px solid var(--bl);
+    padding-top: .8rem;
+
+    div {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        font-size: .85rem;
+        padding: .2rem 0;
+
+        span:first-child {
+            color: var(--ts);
+        }
+    }
+
+    .total-line {
+        font-weight: 700;
+        font-size: 1.05rem;
+        border-top: 1px solid var(--t);
+        padding-top: .5rem;
+        margin-top: .3rem;
+    }
+}
+
+.order-actions {
+    display: flex;
+    gap: .6rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bl);
+}

@@ -1,0 +1,245 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-box" style="color:var(--p)"></i> Quản Lý Sản Phẩm</h2>
+    <div class="hdr-tags">
+      <span class="proto-tag"><i class="fas fa-bolt"></i> REST API</span>
+      <span class="proto-tag"><i class="fas fa-stream"></i> Kafka Sync</span>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="ki pr"><i class="fas fa-cubes"></i></div><div><div class="kv">{{ kpis().total | number }}</div><div class="kl">Tổng sản phẩm</div></div></div>
+    <div class="kpi"><div class="ki sc"><i class="fas fa-check-circle"></i></div><div><div class="kv">{{ kpis().active | number }}</div><div class="kl">Đang hoạt động</div></div></div>
+    <div class="kpi"><div class="ki wr"><i class="fas fa-exclamation-circle"></i></div><div><div class="kv">{{ kpis().outOfStock }}</div><div class="kl">Hết hàng</div></div></div>
+    <div class="kpi"><div class="ki ir"><i class="fas fa-tags"></i></div><div><div class="kv">{{ kpis().categories }}</div><div class="kl">Danh mục</div></div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-input">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Tìm tên hoặc SKU..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); currentPage.set(1)">
+      </div>
+      <select [ngModel]="categoryFilter()" (ngModelChange)="categoryFilter.set($event); currentPage.set(1)">
+        <option value="">Tất cả danh mục</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.name">{{ cat.name }} ({{ cat.productCount }})</option>
+        }
+      </select>
+      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); currentPage.set(1)">
+        <option value="">Tất cả trạng thái</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="out_of_stock">Hết hàng</option>
+      </select>
+    </div>
+    <button class="btn-primary" (click)="openCreate()"><i class="fas fa-plus"></i> Thêm sản phẩm</button>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-body p0">
+      @if (paginatedProducts().length === 0) {
+        <app-empty-state icon="fa-box-open" title="Không tìm thấy sản phẩm" message="Thử thay đổi bộ lọc hoặc tạo sản phẩm mới."></app-empty-state>
+      } @else {
+        <table class="dtbl">
+          <thead><tr><th>SKU</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá bán</th><th>Tồn kho</th><th>Đã bán</th><th>Rating</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+          <tbody>
+            @for (p of paginatedProducts(); track p.id) {
+              <tr>
+                <td class="fw">{{ p.sku }}</td>
+                <td>
+                  <strong class="clickable" (click)="openDetail(p)">{{ p.name }}</strong><br>
+                  <span class="hint">{{ p.variants.length }} biến thể · {{ p.brand }}</span>
+                </td>
+                <td>{{ p.category }}</td>
+                <td class="fw">{{ p.price | vnd }}
+                  @if (p.salePrice) { <br><span class="hint" style="text-decoration:line-through">{{ p.price | vnd }}</span> <span style="color:var(--d)">{{ p.salePrice | vnd }}</span> }
+                </td>
+                <td [class.text-danger]="p.stock === 0" [class.text-warn]="p.stock > 0 && p.stock < 20">{{ p.stock }}</td>
+                <td>{{ p.sold | number }}</td>
+                <td>⭐ {{ p.rating }}</td>
+                <td>
+                  <span class="sb" [ngClass]="{'ok': p.status==='active', 'wait': p.status==='inactive', 'flash': p.status==='out_of_stock'}">
+                    {{ p.status === 'active' ? 'Active' : p.status === 'inactive' ? 'Inactive' : 'Hết hàng' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-icon" title="Sửa" (click)="openEdit(p)"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon danger" title="Xóa" (click)="confirmDelete(p.id)"><i class="fas fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+    <app-pagination [totalItems]="filteredProducts().length" [pageSize]="pageSize" [currentPage]="currentPage()" (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
+
+  <!-- CREATE/EDIT MODAL -->
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="closeForm()">
+      <div class="modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-box" style="color:var(--p)"></i> {{ editingProduct() ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới' }}</h3>
+          <button class="btn-icon" (click)="closeForm()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-tabs">
+          <button [class.active]="activeTab() === 'info'" (click)="activeTab.set('info')">Thông tin cơ bản</button>
+          <button [class.active]="activeTab() === 'variants'" (click)="activeTab.set('variants')">Biến thể</button>
+          <button [class.active]="activeTab() === 'pricing'" (click)="activeTab.set('pricing')">Giá đa kênh</button>
+        </div>
+        <form [formGroup]="productForm" (ngSubmit)="saveProduct()">
+          @if (activeTab() === 'info') {
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Tên sản phẩm *</label>
+                <input formControlName="name" placeholder="Nhập tên sản phẩm...">
+                @if (productForm.get('name')?.touched && productForm.get('name')?.errors) {
+                  <span class="form-error">Tên phải ít nhất 3 ký tự</span>
+                }
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Danh mục *</label>
+                  <select formControlName="category">
+                    <option value="">-- Chọn danh mục --</option>
+                    @for (cat of categories(); track cat.id) { <option [value]="cat.name">{{ cat.name }}</option> }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Thương hiệu *</label>
+                  <input formControlName="brand" placeholder="Nhập thương hiệu...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Mô tả</label>
+                <textarea formControlName="description" rows="3" placeholder="Mô tả sản phẩm..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Giá bán *</label>
+                  <input formControlName="price" type="number" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label>Giá vốn *</label>
+                  <input formControlName="costPrice" type="number" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label>Giá khuyến mãi</label>
+                  <input formControlName="salePrice" type="number" placeholder="Để trống nếu không KM">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Tồn kho ban đầu *</label>
+                <input formControlName="stock" type="number" placeholder="0">
+              </div>
+            </div>
+          }
+          @if (activeTab() === 'variants') {
+            <div class="modal-body">
+              <div class="placeholder-box">
+                <i class="fas fa-layer-group"></i>
+                <h4>Quản lý biến thể</h4>
+                <p>Tạo tổ hợp biến thể từ thuộc tính: Màu sắc × Kích cỡ × Chất liệu</p>
+                @if (editingProduct()?.variants?.length) {
+                  <table class="dtbl" style="margin-top:1rem">
+                    <thead><tr><th>SKU</th><th>Thuộc tính</th><th>Giá</th><th>Tồn kho</th></tr></thead>
+                    <tbody>
+                      @for (v of editingProduct()?.variants; track v.id) {
+                        <tr>
+                          <td class="fw">{{ v.sku }}</td>
+                          <td>@for (attr of v.attributes | keyvalue; track attr.key) { <span class="sb info" style="margin-right:4px">{{ attr.key }}: {{ attr.value }}</span> }</td>
+                          <td>{{ v.price | vnd }}</td>
+                          <td>{{ v.stock }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            </div>
+          }
+          @if (activeTab() === 'pricing') {
+            <div class="modal-body">
+              <div class="placeholder-box">
+                <i class="fas fa-store"></i>
+                <h4>Giá theo kênh bán hàng</h4>
+                <p>Cấu hình giá riêng cho mỗi kênh: Website, Shopee, Lazada, TikTok...</p>
+                @if (editingProduct()?.channels?.length) {
+                  <table class="dtbl" style="margin-top:1rem">
+                    <thead><tr><th>Kênh</th><th>Giá</th><th>Trạng thái</th></tr></thead>
+                    <tbody>
+                      @for (ch of editingProduct()?.channels; track ch.channel) {
+                        <tr>
+                          <td class="fw">{{ ch.channel }}</td>
+                          <td>{{ ch.price | vnd }}</td>
+                          <td><span class="sb" [ngClass]="ch.enabled ? 'ok' : 'wait'">{{ ch.enabled ? 'Bật' : 'Tắt' }}</span></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            </div>
+          }
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeForm()">Hủy</button>
+            <button type="submit" class="btn-primary" [disabled]="productForm.invalid">
+              <i class="fas" [ngClass]="editingProduct() ? 'fa-save' : 'fa-plus'"></i>
+              {{ editingProduct() ? 'Cập nhật' : 'Tạo sản phẩm' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- DETAIL MODAL -->
+  @if (showDetail() && selectedProduct()) {
+    <div class="modal-overlay" (click)="closeDetail()">
+      <div class="modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-eye" style="color:var(--p)"></i> {{ selectedProduct()!.name }}</h3>
+          <button class="btn-icon" (click)="closeDetail()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-item"><span class="dl">SKU</span><span class="dv fw">{{ selectedProduct()!.sku }}</span></div>
+            <div class="detail-item"><span class="dl">Danh mục</span><span class="dv">{{ selectedProduct()!.category }}</span></div>
+            <div class="detail-item"><span class="dl">Thương hiệu</span><span class="dv">{{ selectedProduct()!.brand }}</span></div>
+            <div class="detail-item"><span class="dl">Giá bán</span><span class="dv fw">{{ selectedProduct()!.price | vnd }}</span></div>
+            <div class="detail-item"><span class="dl">Giá vốn</span><span class="dv">{{ selectedProduct()!.costPrice | vnd }}</span></div>
+            <div class="detail-item"><span class="dl">Tồn kho</span><span class="dv">{{ selectedProduct()!.stock }}</span></div>
+            <div class="detail-item"><span class="dl">Đã bán</span><span class="dv">{{ selectedProduct()!.sold | number }}</span></div>
+            <div class="detail-item"><span class="dl">Rating</span><span class="dv">⭐ {{ selectedProduct()!.rating }}</span></div>
+          </div>
+          <p style="margin-top:1rem;color:var(--ts)">{{ selectedProduct()!.description }}</p>
+          @if (selectedProduct()!.variants.length > 0) {
+            <h4 style="margin-top:1.5rem;margin-bottom:.5rem"><i class="fas fa-layer-group" style="color:var(--p)"></i> Biến thể ({{ selectedProduct()!.variants.length }})</h4>
+            <table class="dtbl">
+              <thead><tr><th>SKU</th><th>Thuộc tính</th><th>Giá</th><th>Tồn kho</th></tr></thead>
+              <tbody>
+                @for (v of selectedProduct()!.variants; track v.id) {
+                  <tr>
+                    <td class="fw">{{ v.sku }}</td>
+                    <td>@for (attr of v.attributes | keyvalue; track attr.key) { <span class="sb info" style="margin-right:4px">{{ attr.key }}: {{ attr.value }}</span> }</td>
+                    <td>{{ v.price | vnd }}</td>
+                    <td>{{ v.stock }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- DELETE CONFIRM -->
+  <app-confirm-dialog [visible]="showDeleteConfirm()" title="Xóa sản phẩm" message="Bạn có chắc muốn xóa sản phẩm này? Hành động không thể hoàn tác." confirmText="Xóa" type="danger" (confirmed)="doDelete()" (cancelled)="showDeleteConfirm.set(false)"></app-confirm-dialog>
+</div>

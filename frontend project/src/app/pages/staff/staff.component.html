@@ -1,0 +1,197 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-user-tie" style="color:var(--p)"></i> Quản Lý Nhân Viên</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> REST</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-user-friends"></i></div>
+      <div>
+        <div class="kv">{{ kpis().total }}</div>
+        <div class="kl">Tổng nhân viên</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-user-check"></i></div>
+      <div>
+        <div class="kv">{{ kpis().active }}</div>
+        <div class="kl">Đang hoạt động</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-clock"></i></div>
+      <div>
+        <div class="kv">{{ kpis().shifts }}</div>
+        <div class="kl">Đang trực</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-sitemap"></i></div>
+      <div>
+        <div class="kv">{{ kpis().departments }}</div>
+        <div class="kl">Phòng ban</div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button [class.active]="activeTab()==='staff'" (click)="activeTab.set('staff')"><i class="fas fa-list"></i> Danh
+      sách</button>
+    <button [class.active]="activeTab()==='shifts'" (click)="activeTab.set('shifts')"><i
+        class="fas fa-calendar-alt"></i> Ca làm</button>
+    <button [class.active]="activeTab()==='leaderboard'" (click)="activeTab.set('leaderboard')"><i
+        class="fas fa-trophy"></i> Xếp hạng</button>
+  </div>
+
+  @if (activeTab() === 'staff') {
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-input"><i class="fas fa-search"></i><input placeholder="Tìm tên, mã NV..."
+          [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"></div>
+      <select [ngModel]="departmentFilter()" (ngModelChange)="departmentFilter.set($event)">
+        <option value="">Tất cả phòng ban</option>@for(d of departments; track d){<option [value]="d">{{ d }}</option>}
+      </select>
+    </div><button class="btn-primary" (click)="staffForm.reset({role:'CS_AGENT'}); showForm.set(true)"><i
+        class="fas fa-user-plus"></i> Thêm NV</button>
+  </div>
+  <div class="card">
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Tên</th>
+            <th>Phòng ban</th>
+            <th>Chức vụ</th>
+            <th>Role</th>
+            <th>Kho</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredStaff(); track s.id) {
+          <tr>
+            <td class="fw">{{ s.code }}</td>
+            <td><strong>{{ s.name }}</strong><br><span class="hint">{{ s.email }}</span></td>
+            <td>{{ s.department }}</td>
+            <td>{{ s.position }}</td>
+            <td><span class="sb info">{{ s.role }}</span></td>
+            <td class="hint">{{ s.warehouse || '-' }}</td>
+            <td><span class="sb" [ngClass]="s.status === 'active' ? 'ok' : 'wait'">{{ s.status === 'active' ? 'Active' :
+                'Inactive' }}</span></td>
+            <td><button class="btn-icon danger" (click)="confirmDelete(s.id)"><i class="fas fa-trash"></i></button></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (activeTab() === 'shifts') {
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-calendar-check"></i> Ca làm hôm nay</h3>
+    </div>
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Ngày</th>
+            <th>Bắt đầu</th>
+            <th>Kết thúc</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (shift of staffSvc.getShifts(); track shift.id) {
+          <tr>
+            <td class="fw">{{ shift.staffName }}</td>
+            <td>{{ shift.date }}</td>
+            <td>{{ shift.startTime }}</td>
+            <td>{{ shift.endTime }}</td>
+            <td><span class="sb" [ngClass]="getShiftStatusClass(shift.status)">{{ getShiftStatusLabel(shift.status)
+                }}</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (activeTab() === 'leaderboard') {
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-trophy" style="color:var(--w)"></i> Bảng xếp hạng KPI</h3>
+    </div>
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nhân viên</th>
+            <th>Phòng ban</th>
+            <th>Đơn hàng</th>
+            <th>Doanh thu</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of staffSvc.getLeaderboard(); track s.id; let i = $index) {
+          <tr>
+            <td><span class="rank" [ngClass]="i < 3 ? 'top' : ''">{{ i + 1 }}</span></td>
+            <td class="fw">{{ s.name }}</td>
+            <td>{{ s.department }}</td>
+            <td>{{ s.kpiOrders | number }}</td>
+            <td class="fw">{{ s.kpiRevenue | vnd }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="showForm.set(false)">
+    <div class="modal-lg" style="max-width:550px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-plus" style="color:var(--p)"></i> Thêm nhân viên</h3><button class="btn-icon"
+          (click)="showForm.set(false)"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="staffForm" (ngSubmit)="saveStaff()">
+        <div class="modal-body">
+          <div class="form-group"><label>Tên *</label><input formControlName="name"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label><input formControlName="email"></div>
+            <div class="form-group"><label>SĐT</label><input formControlName="phone"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Phòng ban *</label><select formControlName="department">@for(d of
+                departments;track d){<option [value]="d">{{ d }}</option>}</select></div>
+            <div class="form-group"><label>Chức vụ</label><input formControlName="position"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Role</label><select formControlName="role">
+                <option value="SALES_MGR">Sales Mgr</option>
+                <option value="INV_MGR">Inventory Mgr</option>
+                <option value="MKT_MGR">Marketing Mgr</option>
+                <option value="CS_AGENT">CS Agent</option>
+                <option value="CASHIER">Cashier</option>
+                <option value="ANALYST">Analyst</option>
+              </select></div>
+            <div class="form-group"><label>Kho</label><input formControlName="warehouse" placeholder="VD: WH-HCM"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-cancel"
+            (click)="showForm.set(false)">Hủy</button><button type="submit" class="btn-primary"
+            [disabled]="staffForm.invalid"><i class="fas fa-save"></i> Lưu</button></div>
+      </form>
+    </div>
+  </div>
+  }
+  <app-confirm-dialog [visible]="showDeleteConfirm()" title="Xóa nhân viên"
+    message="Bạn có chắc muốn xóa nhân viên này?" confirmText="Xóa" type="danger" (confirmed)="doDelete()"
+    (cancelled)="showDeleteConfirm.set(false)"></app-confirm-dialog>
+</div>

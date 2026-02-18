@@ -1,0 +1,23 @@
+@use '../../pages/products/products.component.scss';
+
+.chart-container {
+    height: 280px;
+    position: relative;
+}
+
+.rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bl);
+    font-size: .75rem;
+    font-weight: 700;
+
+    &.top {
+        background: linear-gradient(135deg, #FFD93D, #FF6633);
+        color: #fff;
+    }
+}

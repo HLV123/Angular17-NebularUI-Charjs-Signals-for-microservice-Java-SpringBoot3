@@ -1,0 +1,67 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-globe" style="color:var(--p)"></i> Omnichannel</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> WebSocket · REST</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-plug"></i></div>
+      <div>
+        <div class="kv">{{ connectedCount }}/{{ ch.getChannels().length }}</div>
+        <div class="kl">Kênh kết nối</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-dollar-sign"></i></div>
+      <div>
+        <div class="kv">{{ totalRevenue | vnd }}</div>
+        <div class="kl">Tổng doanh thu</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-shopping-bag"></i></div>
+      <div>
+        <div class="kv">{{ totalOrders | number }}</div>
+        <div class="kl">Tổng đơn hàng</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2" style="gap:1rem">
+    @for (channel of ch.getChannels(); track channel.id) {
+    <div class="card channel-card" [class.disconnected]="channel.status !== 'connected'">
+      <div class="card-body">
+        <div class="ch-header">
+          <div class="ch-icon"><i class="fas"
+              [ngClass]="{'fa-shopping-bag':channel.type==='marketplace','fa-cash-register':channel.type==='pos','fa-globe':channel.type==='own','fa-share-alt':channel.type==='social'}"></i>
+          </div>
+          <div>
+            <h4>{{ channel.name }}</h4>
+            <p class="hint">{{ channel.type | uppercase }}</p>
+          </div>
+          <div class="ch-status" style="margin-left:auto">
+            <span class="sb" [ngClass]="channel.status === 'connected' ? 'ok' : 'flash'">
+              <i class="fas fa-circle" style="font-size:.5rem"></i> {{ channel.status === 'connected' ? 'Đã kết nối' :
+              'Ngắt kết nối' }}
+            </span>
+            <button class="btn-toggle" [class.active]="channel.status === 'connected'"
+              (click)="ch.toggleChannel(channel.id)"
+              [title]="channel.status === 'connected' ? 'Ngắt kết nối' : 'Kết nối lại'">
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+        </div>
+        <div class="ch-metrics">
+          <div><span class="ml">Đơn hàng</span><strong>{{ channel.orders | number }}</strong></div>
+          <div><span class="ml">Doanh thu</span><strong>{{ channel.revenue | vnd }}</strong></div>
+          <div><span class="ml">Thị phần</span><strong>{{ getChannelShare(channel.revenue) }}%</strong></div>
+        </div>
+        <div class="ch-bar">
+          <div class="ch-fill" [style.width.%]="getChannelShare(channel.revenue)"></div>
+        </div>
+        @if (channel.lastSync) { <p class="hint" style="margin-top:.5rem;font-size:.75rem"><i
+            class="fas fa-sync-alt"></i> Đồng bộ: {{ channel.lastSync | relativeTime }}</p> }
+      </div>
+    </div>
+    }
+  </div>
+</div>

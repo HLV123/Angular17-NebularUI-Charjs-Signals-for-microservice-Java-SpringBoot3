@@ -1,0 +1,239 @@
+<div class="page fade-in">
+  <div class="page-hdr">
+    <h2><i class="fas fa-users" style="color:var(--p)"></i> Quản Lý Khách Hàng (CRM)</h2>
+    <div class="hdr-tags"><span class="proto-tag"><i class="fas fa-bolt"></i> REST · gRPC</span></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="ki pr"><i class="fas fa-users"></i></div>
+      <div>
+        <div class="kv">{{ kpis().total | number }}</div>
+        <div class="kl">Tổng khách hàng</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki sc"><i class="fas fa-coins"></i></div>
+      <div>
+        <div class="kv">{{ kpis().totalSpent | vnd }}</div>
+        <div class="kl">Tổng chi tiêu</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki ir"><i class="fas fa-chart-line"></i></div>
+      <div>
+        <div class="kv">{{ kpis().avgValue | vnd }}</div>
+        <div class="kl">AOV trung bình</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="ki wr"><i class="fas fa-user-plus"></i></div>
+      <div>
+        <div class="kv">{{ kpis().newThisMonth }}</div>
+        <div class="kl">Mới trong 30 ngày</div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button [class.active]="activeTab()==='customers'" (click)="activeTab.set('customers')"><i
+        class="fas fa-address-book"></i> Khách hàng</button>
+    <button [class.active]="activeTab()==='segments'" (click)="activeTab.set('segments')"><i
+        class="fas fa-layer-group"></i> Phân khúc</button>
+    <button [class.active]="activeTab()==='loyalty'" (click)="activeTab.set('loyalty')"><i class="fas fa-crown"></i>
+      Loyalty</button>
+  </div>
+
+  @if (activeTab() === 'customers') {
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-input"><i class="fas fa-search"></i><input placeholder="Tìm tên, SĐT, email..."
+          [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"></div>
+      <select [ngModel]="segmentFilter()" (ngModelChange)="segmentFilter.set($event)">
+        <option value="">Tất cả phân khúc</option>
+        @for (seg of segments(); track seg.name) { <option [value]="seg.name">{{ seg.name }}</option> }
+      </select>
+    </div>
+    <button class="btn-primary" (click)="openCreate()"><i class="fas fa-user-plus"></i> Thêm KH</button>
+  </div>
+  <div class="card">
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Mã KH</th>
+            <th>Tên</th>
+            <th>SĐT</th>
+            <th>Đơn hàng</th>
+            <th>Chi tiêu</th>
+            <th>Phân khúc</th>
+            <th>Loyalty</th>
+            <th>Đơn gần nhất</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of paginatedCustomers(); track c.id) {
+          <tr>
+            <td class="fw">{{ c.code }}</td>
+            <td><strong class="clickable" (click)="openDetail(c)">{{ c.name }}</strong><br><span class="hint">{{ c.email
+                }}</span></td>
+            <td>{{ c.phone }}</td>
+            <td>{{ c.totalOrders }}</td>
+            <td class="fw">{{ c.totalSpent | vnd }}</td>
+            <td><span class="sb" [style.background]="getSegmentColor(c.segment)+'22'"
+                [style.color]="getSegmentColor(c.segment)">{{ c.segment }}</span></td>
+            <td><span class="sb" [style.background]="getTierColor(c.loyaltyTier)+'22'"
+                [style.color]="getTierColor(c.loyaltyTier)"><i class="fas fa-crown"></i> {{ c.loyaltyTier }}</span></td>
+            <td class="hint">{{ c.lastOrderAt | relativeTime }}</td>
+            <td>
+              <div class="action-btns"><button class="btn-icon" (click)="openDetail(c)"><i
+                    class="fas fa-eye"></i></button><button class="btn-icon danger" (click)="confirmDelete(c.id)"><i
+                    class="fas fa-trash"></i></button></div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [totalItems]="filteredCustomers().length" [pageSize]="pageSize" [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
+  }
+
+  @if (activeTab() === 'segments') {
+  <div class="grid-3">
+    @for (seg of segments(); track seg.name) {
+    <div class="card">
+      <div class="card-body" style="text-align:center">
+        <div class="seg-circle" [style.border-color]="seg.color"><span [style.color]="seg.color">{{ seg.count | number
+            }}</span></div>
+        <h4>{{ seg.name }}</h4>
+        <p class="hint" [style.color]="seg.change > 0 ? 'var(--s)' : 'var(--d)'">
+          <i class="fas" [ngClass]="seg.change > 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i> {{ seg.change > 0 ? '+' : ''
+          }}{{ seg.change }}% vs tháng trước
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (activeTab() === 'loyalty') {
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-crown" style="color:var(--w)"></i> Chương trình Loyalty</h3>
+    </div>
+    <div class="card-body p0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Hạng</th>
+            <th>Điểm tối thiểu</th>
+            <th>Giảm giá</th>
+            <th>Freeship</th>
+            <th>Số thành viên</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tier of loyaltyTiers(); track tier.name) {
+          <tr>
+            <td><span class="sb" [style.background]="getTierColor(tier.name)+'22'"
+                [style.color]="getTierColor(tier.name)"><i class="fas fa-crown"></i> {{ tier.name }}</span></td>
+            <td>{{ tier.minPoints | number }} điểm</td>
+            <td>{{ tier.discount }}%</td>
+            <td>{{ tier.freeShip ? '✓ Có' : '✗ Không' }}</td>
+            <td class="fw">{{ tier.count | number }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- Detail modal -->
+  @if (showDetail() && selectedCustomer()) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-user" style="color:var(--p)"></i> {{ selectedCustomer()!.name }}</h3><button
+          class="btn-icon" (click)="closeDetail()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item"><span class="dl">Mã KH</span><span class="dv fw">{{ selectedCustomer()!.code
+              }}</span></div>
+          <div class="detail-item"><span class="dl">Email</span><span class="dv">{{ selectedCustomer()!.email }}</span>
+          </div>
+          <div class="detail-item"><span class="dl">SĐT</span><span class="dv">{{ selectedCustomer()!.phone }}</span>
+          </div>
+          <div class="detail-item"><span class="dl">Giới tính</span><span class="dv">{{ selectedCustomer()!.gender
+              }}</span></div>
+          <div class="detail-item"><span class="dl">Tổng chi tiêu</span><span class="dv fw">{{
+              selectedCustomer()!.totalSpent | vnd }}</span></div>
+          <div class="detail-item"><span class="dl">Đơn hàng</span><span class="dv">{{ selectedCustomer()!.totalOrders
+              }}</span></div>
+          <div class="detail-item"><span class="dl">Loyalty</span><span class="dv"><i class="fas fa-crown"
+                [style.color]="getTierColor(selectedCustomer()!.loyaltyTier)"></i> {{ selectedCustomer()!.loyaltyTier }}
+              ({{ selectedCustomer()!.loyaltyPoints | number }} điểm)</span></div>
+          <div class="detail-item"><span class="dl">Phân khúc</span><span class="dv"><span class="sb"
+                [style.background]="getSegmentColor(selectedCustomer()!.segment)+'22'"
+                [style.color]="getSegmentColor(selectedCustomer()!.segment)">{{ selectedCustomer()!.segment
+                }}</span></span></div>
+        </div>
+        @if (selectedCustomer()!.tags.length) {
+        <div style="margin-top:1rem">
+          @for (tag of selectedCustomer()!.tags; track tag) { <span class="sb info" style="margin-right:.3rem">{{ tag
+            }}</span> }
+        </div>
+        }
+        <h4 style="margin:1.5rem 0 .5rem"><i class="fas fa-history" style="color:var(--p)"></i> Hoạt động gần đây</h4>
+        <div class="activity-list">
+          @for (act of cs.getActivities(selectedCustomer()!.id); track act.id) {
+          <div class="activity-item">
+            <div class="act-icon" [ngClass]="act.type"><i class="fas"
+                [ngClass]="{'fa-shopping-bag':act.type==='order','fa-star':act.type==='review','fa-gift':act.type==='loyalty','fa-comment':act.type==='support'}"></i>
+            </div>
+            <div>
+              <p>{{ act.description }}</p><span class="hint">{{ act.channel }} · {{ act.date | relativeTime }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Create modal -->
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="showForm.set(false)">
+    <div class="modal-lg" style="max-width:500px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-plus" style="color:var(--p)"></i> Thêm khách hàng</h3><button class="btn-icon"
+          (click)="showForm.set(false)"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="customerForm" (ngSubmit)="saveCustomer()">
+        <div class="modal-body">
+          <div class="form-group"><label>Tên *</label><input formControlName="name" placeholder="Họ tên"></div>
+          <div class="form-row">
+            <div class="form-group"><label>SĐT *</label><input formControlName="phone" placeholder="0912345678"></div>
+            <div class="form-group"><label>Giới tính</label><select formControlName="gender">
+                <option value="">--</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select></div>
+          </div>
+          <div class="form-group"><label>Email</label><input formControlName="email" placeholder="email@example.com">
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-cancel"
+            (click)="showForm.set(false)">Hủy</button><button type="submit" class="btn-primary"
+            [disabled]="customerForm.invalid"><i class="fas fa-save"></i> Lưu</button></div>
+      </form>
+    </div>
+  </div>
+  }
+  <app-confirm-dialog [visible]="showDeleteConfirm()" title="Xóa khách hàng"
+    message="Bạn có chắc muốn xóa khách hàng này?" confirmText="Xóa" type="danger" (confirmed)="doDelete()"
+    (cancelled)="showDeleteConfirm.set(false)"></app-confirm-dialog>
+</div>

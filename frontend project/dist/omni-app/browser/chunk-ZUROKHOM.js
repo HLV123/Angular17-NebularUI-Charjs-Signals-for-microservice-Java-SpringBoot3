@@ -1,0 +1,1 @@
+import{ba as e}from"./chunk-66D5TQFD.js";var o=(()=>{class t{transform(r){return r==null?"0\u20AB":r.toLocaleString("vi-VN")+"\u20AB"}static{this.\u0275fac=function(i){return new(i||t)}}static{this.\u0275pipe=e({name:"vnd",type:t,pure:!0,standalone:!0})}}return t})();export{o as a};
